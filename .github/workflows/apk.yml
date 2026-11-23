@@ -1,0 +1,68 @@
+# Gera o APK de teste do Android automaticamente no GitHub.
+# Depois de subir o projeto: aba Actions > "Gerar APK" > abra a execução > baixe "natal-vision-apk".
+name: Gerar APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Montar o site
+        env:
+          # Opcional: cadastre em Settings > Secrets and variables > Actions para o APK usar o Firebase
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
+        run: npm run build
+
+      - name: Criar projeto Android
+        run: |
+          [ -d android ] || npx cap add android
+          npx cap sync android
+
+      - name: ID do AdMob (teste do Google, troque pelo seu antes de publicar)
+        run: |
+          python3 - <<'EOF2'
+          p = 'android/app/src/main/AndroidManifest.xml'
+          s = open(p).read()
+          if 'gms.ads.APPLICATION_ID' not in s:
+              tag = '<meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="ca-app-pub-3940256099942544~3347511713"/>'
+              i = s.index('<application'); j = s.index('>', i) + 1
+              s = s[:j] + '\n        ' + tag + s[j:]
+              open(p, 'w').write(s)
+          EOF2
+
+      - name: Compilar APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: natal-vision-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk

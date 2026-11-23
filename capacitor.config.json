@@ -1,0 +1,12 @@
+{
+  "appId": "com.natalvision.app",
+  "appName": "Natal Vision",
+  "webDir": "dist",
+  "backgroundColor": "#0f5132",
+  "plugins": {
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_icon",
+      "iconColor": "#c8102e"
+    }
+  }
+}

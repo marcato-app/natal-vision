@@ -1,0 +1,13 @@
+{
+  "name": "Natal Vision",
+  "short_name": "Natal Vision",
+  "description": "Organize o Natal da família: amigo secreto, pratos, vaquinha, leilão, bingo e brincadeiras.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0f5132",
+  "theme_color": "#0f5132",
+  "lang": "pt-BR",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

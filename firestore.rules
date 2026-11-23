@@ -1,0 +1,21 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Evento: qualquer pessoa logada (login anônimo automático) que tenha o código entra.
+    match /events/{code} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && request.resource.data.owner == request.auth.uid;
+      // Ninguém troca o dono do evento
+      allow update: if request.auth != null && request.resource.data.owner == resource.data.owner;
+      allow delete: if request.auth != null && resource.data.owner == request.auth.uid;
+
+      // Resultado do amigo secreto: cada pessoa só lê o próprio; só quem organizou grava
+      match /secret/{pid} {
+        allow read: if request.auth != null && request.auth.uid == pid;
+        allow write: if request.auth != null
+          && get(/databases/$(database)/documents/events/$(code)).data.owner == request.auth.uid;
+      }
+    }
+  }
+}
